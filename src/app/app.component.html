@@ -1,0 +1,144 @@
+<div id="main-container" class="container" [style.backgroundColor]="currentVideocallView == 0 ? '#383838' : 'transparent'">
+	<div *ngIf="session" id="session">
+		<div *ngIf="localUser.getStreamManager()" 
+		class="col-md-6" 
+		[className]="currentVideocallView != 1 ? 'mainHidden' : 'mainVisible'">
+			<user-video [streamManager]="localUser.getStreamManager()" 
+			[audioOutput]="localUser.audioOutputSourceId" 
+			class="mainParticipant"></user-video>
+			<img 
+			*ngIf="!cameraEnabled && !screensharing" src="assets/logo.svg" 
+			style="position: absolute;
+				width: 200px;
+				height: auto;
+				left: calc(50% - 100px);
+				top: 5px;"/>
+		</div>
+
+		<div id="video-container" class="col-md-6" 
+		[className]="currentVideocallView != 1 ? 'secondaryVisible' : 'secondaryHidden'">
+			<div 
+			*ngIf="!!localUser && localUser.getStreamManager()" 
+			class="stream-container col-md-4 col-xs-4" 
+			style="background-color: #ffffff;"
+			id="mainParticipantContainer">
+				<user-video 
+				[streamManager]="localUser.getStreamManager()" 
+				class="mainParticipant"
+				(click)="updateMainStreamManager(localUser.getStreamManager())"></user-video>
+
+				<img *ngIf="!cameraEnabled && !screensharing" src="assets/logo.svg" style="position: absolute;
+				width: 450px;height: auto;
+				left: calc(50% - 225px);top: 5px;"/>
+			</div>
+
+			<div 
+			*ngFor="let sub of subscribers" 
+			class="stream-container col-md-4 col-xs-4" 
+			id="otherParticipantsContainer">
+				<user-video  
+				*ngIf="cameraEnabled" 
+				[streamManager]="sub" 
+				class="otherParticipants" 
+				(click)="updateMainStreamManager(sub)"></user-video>
+			</div>
+
+			<div class="stream-container col-md-4 col-xs-4">
+				<div class="panel-body" id="container-cameras"></div>
+			</div>
+		</div>
+
+		<div class="options-bar" 
+		[style.backgroundColor]="currentVideocallView == 0 ? 'transparent' : 'rgb(255, 255, 255, 0.7)'"
+		[style.backdropFilter]="currentVideocallView == 0 ? 'none' : 'blur(10px) brightness(115%)'">
+			<div class="camera">
+				<img class="options"
+					[src]="cameraEnabled && currentVideocallView == 0 ? 'assets/images/camera-disabled-white.svg' : 
+					cameraEnabled && currentVideocallView != 0 ? 'assets/images/camera-disabled-dark.svg' : 
+					!cameraEnabled && currentVideocallView == 0 ? 'assets/images/camera-enabled-white.svg' : 
+					!cameraEnabled && currentVideocallView != 0 ? 'assets/images/camera-enabled-dark.svg' : null"
+					[title]="cameraEnabled ? 'Disable camera' : 'Enable camera'" (click)="enableDisableCamera()" />
+
+				<img 
+					*ngIf="cameraEnabled && currentVideocallView != 1"
+					class="more-options"
+					[src]="!cameraOptionsState && currentVideocallView == 0 ? 'assets/images/show-options-white.svg' : 
+					!cameraOptionsState && currentVideocallView != 0 ? 'assets/images/show-options-dark.svg' : 
+					cameraOptionsState && currentVideocallView == 0 ? 'assets/images/hide-options-white.svg' : 
+					cameraOptionsState && currentVideocallView != 0 ? 'assets/images/hide-options-dark.svg' : null"
+					title="Choose camera" 
+					(click)="operateCameraOptions()"/>
+
+				<select 
+					*ngIf="cameraOptionsState"
+					[(ngModel)]="localUser.videoSourceId" 
+					(ngModelChange)="setVideoDevice($event)" 
+					class="sub-options"
+					id="cameraOptions">
+						<option 
+						*ngFor="let device of localUser.getVideoSources()" 
+						class="sub-options-values"
+						id="cameraOptionsValues"
+						[ngValue]="device.deviceId">{{device.label}}
+						</option>
+				</select>
+			</div>
+
+			<div class="microphone">
+				<img class="options"
+					[src]="microphoneEnabled && currentVideocallView == 0 ? 'assets/images/microphone-disabled-white.svg' : 
+					microphoneEnabled && currentVideocallView != 0 ? 'assets/images/microphone-disabled-dark.svg' : 
+					!microphoneEnabled && currentVideocallView == 0 ? 'assets/images/microphone-enabled-white.svg' : 
+					!microphoneEnabled && currentVideocallView != 0 ? 'assets/images/microphone-enabled-dark.svg' : null"
+					[title]="microphoneEnabled ? 'Disable microphone' : 'Enable microphone'"
+					(click)="enableDisableMicrophone()" />
+
+				<img 
+					*ngIf="microphoneEnabled && currentVideocallView != 1"
+					class="more-options"
+					[src]="!microphoneOptionsState && currentVideocallView == 0 ? 'assets/images/show-options-white.svg' : 
+					!microphoneOptionsState && currentVideocallView != 0 ? 'assets/images/show-options-dark.svg' : 
+					microphoneOptionsState && currentVideocallView == 0 ? 'assets/images/hide-options-white.svg' : 
+					microphoneOptionsState && currentVideocallView != 0 ? 'assets/images/hide-options-dark.svg' : null"
+					title="Choose microphone" 
+					(click)="operateMicrophoneOptions()"/>
+
+				<select 
+					*ngIf="microphoneOptionsState"
+					[(ngModel)]="localUser.audioSourceId" 
+					(ngModelChange)="setAudioDevice($event)" 
+					class="sub-options"
+					id="microphoneOptions">
+						<option 
+						*ngFor="let device of localUser.getAudioSources()" 
+						class="sub-options-values"
+						id="microphoneOptionsValues"
+						[ngValue]="device.deviceId">{{device.label}}
+						</option>
+					</select>
+			</div>
+
+			<img 
+			*ngIf="!screensharing"
+			class="share-screen" 
+			[src]="!screensharing && currentVideocallView == 0 ? 'assets/images/share-screen-white.svg' : 
+			!screensharing && currentVideocallView != 0 ? 'assets/images/share-screen-dark.svg' : null"
+			[style.marginLeft]="currentVideocallView == 1 ? '50px' : '70px'"
+			title="Share my screen"
+			(click)="publishScreenShare()"
+			/>
+
+			<img 
+			class="chat" 
+			[src]="currentVideocallView == 0 ? 'assets/images/chat-white.svg' : 'assets/images/chat-dark.svg'"
+			title="Go to chat"
+			(click)="goToChat()"
+			/>
+
+			<button 
+			class="leave-session" 
+			[style.marginLeft]="currentVideocallView == 1 ? '50px' : '70px'"
+			(click)="destroySession()">Leave</button>
+		</div>
+	</div>
+</div>

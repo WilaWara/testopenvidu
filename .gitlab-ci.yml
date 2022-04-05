@@ -1,0 +1,4 @@
+include:
+  - project: 'ses3/startups/meetpoint/ops/ci-cd'
+    file: 'pipelines/openvidu-web.yml'
+
